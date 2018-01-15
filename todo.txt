@@ -1,0 +1,14 @@
++ todo list
+
+1. config avatar path[finish]
+config.py -> avatar_path 
+
+config.py -> video_avatar_path
+          -> user_avatar_path
+
+
+2. aschu *** [finish]
+设置后台进程
+
+3. tempor
+    + 更新的时候可以每次都提交

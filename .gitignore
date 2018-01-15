@@ -99,3 +99,11 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# for this projection
+json.json
+parse_video.json
+html.html
+.idea/
+log
+tools/parts
