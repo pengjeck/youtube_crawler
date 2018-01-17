@@ -12,7 +12,7 @@ command = [
     '1'
 ]
 fls = []
-# TODO: 要改进的地方，检测程序是否已经退出，然后主程序退出的话，记得kill其他的程序。
+
 for i in range(100):
     command[2] = str(i)
     fl = subprocess.Popen(command)

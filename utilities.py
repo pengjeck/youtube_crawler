@@ -5,7 +5,6 @@ toolbox
 import json
 from datetime import datetime
 import re
-from pytz import timezone
 from config import YConfig
 
 
@@ -17,13 +16,13 @@ def time_rfc3339(delta, now=None):
     :return: string
     """
     if now is None:
-        now = datetime.now().astimezone(timezone('utc'))
+        now = datetime.utcnow()
     return (now - delta).isoformat('T')[:-7] + 'Z'
 
 
-def to_utc(date):
-    """convert datetime's timezone to utc"""
-    return date.astimezone(timezone('utc'))
+# def to_utc(date):
+#     """convert datetime's timezone to utc"""
+#     return date.astimezone(timezone('utc'))
 
 
 def youtube_timedecoder(time_str):

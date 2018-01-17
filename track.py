@@ -17,8 +17,8 @@ import sys
 class Instance:
     """a track instance for adjust the params"""
 
-    def __init__(self, words, index):
-        self.db = SqlYoutube(index)
+    def __init__(self, words, part_index):
+        self.db = SqlYoutube(part_index)
         self.video_ids = []
         self._words = words
         self._setup()
@@ -34,10 +34,10 @@ class Instance:
                 continue
 
             no_duplication_index = []
-            for (index, vid) in enumerate(search_page.vids):
+            for (part_index, vid) in enumerate(search_page.vids):
                 try:
                     self.db.insert(vid, is_commit=False)
-                    no_duplication_index.append(index)
+                    no_duplication_index.append(part_index)
                 except sqlite3.IntegrityError as sqlite_ie:
                     logger.info('video id={} duplicated! msg:{}'.format(vid.video_id,
                                                                         sqlite_ie))
@@ -62,7 +62,7 @@ class Instance:
             beg = time.time()
 
             with Pool(YConfig.PROCESSES_NUM) as p:
-                videos = p.map(VideoPage, self.video_ids)
+                videos = p.map(VideoPage, (self.video_ids, self.db))
 
             for video in videos:
                 # assert isinstance(video, VideoPage)
@@ -93,14 +93,20 @@ class Instance:
 job_instance = None
 base_words_path = ''
 
+count = 0
+
 
 def tick():
+    global count
+    count += 1
+    beg = time.time()
     job_instance.track()
+    logger.error('the {}th run finished!, consume: {}s'.format(count, time.time() - beg))
 
 
-def get_words(index):
+def get_words(part_index):
     file_path = '/home/pj/datum/GraduationProject/dataset/google-10000-english/parts/part{}_google_10000.txt'.format(
-        index)
+        part_index)
     with open(file_path, 'r') as f:
         return f.readline().split('|')
 

@@ -38,17 +38,7 @@ class SqlYoutube:
                                                    dislikes INTEGER,\
                                                    comments INTEGER)")
 
-    def execute_sql(self, sql_lan):
-        """
-        execute other sql words.
-        """
-        try:
-            self.cur.execute(sql_lan)
-            self.conn.commit()
-        except sqlite3.OperationalError as o_e:
-            logger.exception(o_e)
-
-    def insert(self, obj, is_commit=True):
+    def insert(self, obj, is_commit=False):
         """
         insert a object to database.
         """
@@ -61,14 +51,14 @@ class SqlYoutube:
         else:
             raise TypeError('insert should be Video, User, Tempor')
 
-    def _insert_user(self, user_obj, is_commit=True):
+    def _insert_user(self, user_obj, is_commit=False):
         if not isinstance(user_obj, User):
             raise TypeError('expect User object')
         self.cur.execute("INSERT INTO user VALUES(?,?,?,?,?,?)", user_obj.dump())
         if is_commit:
             self.conn.commit()
 
-    def _insert_video(self, video_obj, is_commit=True):
+    def _insert_video(self, video_obj, is_commit=False):
         if not isinstance(video_obj, Video):
             raise TypeError('expect Video object')
         self.cur.execute("INSERT INTO video VALUES(?,?,?,?,?,?,?)",
@@ -76,9 +66,50 @@ class SqlYoutube:
         if is_commit:
             self.conn.commit()
 
-    def _insert_tempor(self, tempor_obj, is_commit=True):
+    def _insert_tempor(self, tempor_obj, is_commit=False):
         if not isinstance(tempor_obj, Tempor):
             raise TypeError('expect tempor object')
         self.cur.execute("INSERT INTO tempor VALUES(?,?,?,?,?,?)", tempor_obj.dump())
         if is_commit:
             self.conn.commit()
+
+    def remove_video(self, video_id):
+        """
+        remove from video table and tempor
+        :param video_id: video id
+        :return:
+        """
+        code_1 = self.remove_video_tempor(video_id)
+        code_2 = self.remove_video_video(video_id)
+        if code_1 == -1 or code_2 == -1:
+            return -1
+
+    def remove_video_tempor(self, video_id):
+        """
+        remove video from tempor table
+        :param video_id:
+        :return:
+        """
+        try:
+            sql_lan = "delete from tempor where video_id=?"
+            res = self.cur.execute(sql_lan, video_id)
+            return res.rowcount
+        except sqlite3.DatabaseError as db_e:
+            logger.error('cannot delete video = {} from tempor table. msg:{}'.format(video_id, db_e))
+            return -1
+
+    def remove_video_video(self, video_id):
+        """
+        remove video from video table
+        :param video_id:
+        :return:
+        """
+        try:
+            sql_lan = 'delete from video where video_id=?'
+            res = self.cur.execute(sql_lan, video_id)
+            return res.rowcount
+        except sqlite3.DatabaseError as db_e:
+            logger.error('cannot delete video = {} from video table msg:{}'.format(video_id, db_e))
+            return -1
+
+

@@ -48,16 +48,16 @@ class YConfig:
     ]
 
     PROXIES = {
-        'http': 'socks5://127.0.0.1:1080',
-        'https': 'socks5://127.0.0.1:1080'
+        'http': 'socks5://127.0.0.1:1081',
+        'https': 'socks5://127.0.0.1:1081'
     }
 
     SEARCH_PAGE_SIZE = 15  # youtube search api page size
 
     TRACK_SPAN = 900  # 15 * 60 = 900 minute. 默认15分钟记录一次
-    TIMEOUT = 5  # 3秒的超时时间
+    TIMEOUT = 3  # 4秒的超时时间
 
-    BEFORE_TIMEDELTA = timedelta(minutes=10)  # 10分钟
+    BEFORE_TIMEDELTA = timedelta(minutes=7)  # 7分钟
 
     PROCESSES_NUM = 30  # pool(30)
 
@@ -71,12 +71,9 @@ class YConfig:
 
 logger = logging.getLogger('base')
 formatter = logging.Formatter('%(asctime)s - %(message)s')
-# sh = logging.StreamHandler()
-# sh.setLevel(logging.ERROR)
-# sh.setFormatter(formatter)
+
 
 fh = logging.FileHandler(YConfig.logging_file())
 fh.setLevel(logging.INFO)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
-# logger.addHandler(sh)

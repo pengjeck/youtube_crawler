@@ -9,6 +9,7 @@ import requests
 from utilities import youtube_timedecoder, time_rfc3339, record_data
 from video import Video
 from config import logger, YConfig
+from myexception import VideoRemoved
 
 
 def avatar_url_parse(item, avatar_type):
@@ -74,7 +75,7 @@ class SearchPage:
                     logger.error('error when request search page. error code: {}'.format(error_code))
                     self.data = None
                     return -1
-            if 'kind' in self.data and self.data['kind'] == 'youtube#searchListResponse':
+            if 'kind' in self.data and self.data['kind'] != 'youtube#searchListResponse':
                 self.data = None
                 return 1
 
@@ -136,7 +137,8 @@ class VideoPage:
     parse video page content
     """
 
-    def __init__(self, video_id):
+    def __init__(self, video_id, db):
+        self.db = db
         self.video_id = video_id
         self.time = None
         self.views = -1
@@ -150,6 +152,30 @@ class VideoPage:
 
     def setup(self):
         """setup"""
+        try:
+            code = self.http_request()
+            if code == 1:
+                # 再试一次
+                re_code = self.http_request()
+                if re_code == 0:
+                    self.parse()
+                    self.is_finish = True
+                else:
+                    self.is_finish = False
+            elif code == 0:
+                self.parse()
+                self.is_finish = True
+            else:
+                self.is_finish = False
+        except ValueError as v_e:
+            logger.error('value error occur. Reason:{}'.format(v_e))
+            self.is_finish = False
+        except VideoRemoved as vr_e:
+            self.db.remove_video(self.video_id)
+            self.is_finish = False
+            logger.error('video removed. video id = {}. Reason:{}'.format(self.video_id, vr_e))
+
+    def http_request(self):
         video_url = 'https://www.youtube.com/watch'
         params = {
             'v': self.video_id
@@ -159,27 +185,26 @@ class VideoPage:
                                proxies=YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = req.text
-            self.parse_views()
-            self.parse_likes()
-            self.parse_dislikes()
-            self.parse_comments()
-            self.is_finish = True
+            return 0
         except requests.HTTPError as http_e:
             logger.error('network error when request video page. Reason:{}'.format(http_e))
-            self.is_finish = False
+            return -1
         except requests.Timeout:
             logger.error('time out when request video page. ')
-            self.is_finish = False
+            return -1
         except requests.ConnectionError:
             logger.error('connection error occur when request video page')
-            self.is_finish = False
+            return -1
         except requests.exceptions.ChunkedEncodingError as chunk_e:
             logger.error('requests.exceptions.ChunkedEncodingError occur {}'.format(chunk_e))
-            self.is_finish = False
-        except ValueError as v_e:
-            record_data(self.data, type='html')
-            logger.error('value error occur. Reason:{}'.format(v_e))
-            self.is_finish = False
+            return 1
+
+    def parse(self):
+        # 解析
+        self.parse_views()
+        self.parse_likes()
+        self.parse_dislikes()
+        self.parse_comments()
 
     def parse_views(self):
         """parse view count to self.views"""
@@ -187,7 +212,7 @@ class VideoPage:
             row_views = re.search('"view_count":"\d+"', self.data)
             if row_views is None:
                 if self.data.find('has been removed') != -1:
-                    raise ValueError('this video has been removed by the user.')
+                    raise VideoRemoved('this video has been removed by the user.')
                 elif self.data.find('live stream recording is not available') != -1:
                     raise ValueError('This live stream recording is not available.')
                 else:
@@ -204,7 +229,7 @@ class VideoPage:
             row_likes = re.search('like this video along with [\d,]+ other', self.data)
             if row_likes is None:
                 if self.data.find('has been removed') != -1:
-                    raise ValueError('this video has been removed by the user.')
+                    raise VideoRemoved('this video has been removed by the user.')
                 elif self.data.find('live stream recording is not available') != -1:
                     raise ValueError('This live stream recording is not available.')
                 else:
