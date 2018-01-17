@@ -60,12 +60,15 @@ class Instance:
                 self.db.insert(temp, is_commit=False)
         else:
             beg = time.time()
-
             with Pool(YConfig.PROCESSES_NUM) as p:
-                videos = p.map(VideoPage, (self.video_ids, self.db))
+                videos = p.map(VideoPage, self.video_ids)
 
             for video in videos:
-                # assert isinstance(video, VideoPage)
+                if video.is_removed:
+                    # self.db.remove_video(video.video_id)
+                    self.video_ids.remove(video.video_id)
+                    continue
+
                 if not video.is_finish:
                     continue
 
@@ -78,7 +81,6 @@ class Instance:
                 datetime.now(), len(self.video_ids),
                 time.time() - beg))
         self.db.conn.commit()
-        # print('tracked')
 
     def search_test(self):
         temp_video_ids = []
@@ -89,19 +91,7 @@ class Instance:
         # self.video_ids = list(set(self.video_ids))
 
 
-# 全局的变量
-job_instance = None
-base_words_path = ''
-
 count = 0
-
-
-def tick():
-    global count
-    count += 1
-    beg = time.time()
-    job_instance.track()
-    logger.error('the {}th run finished!, consume: {}s'.format(count, time.time() - beg))
 
 
 def get_words(part_index):
@@ -111,21 +101,13 @@ def get_words(part_index):
         return f.readline().split('|')
 
 
-def single_scheduler(i):
-    global job_instance
-    words = get_words(i)
-    job_instance = Instance(words, index)
-    scheduler = BlockingScheduler()
-    scheduler.add_executor('processpool')
-    # scheduler.add_job(tick, 'interval', seconds=200)
-    scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        print('background process has exit!!!')
-        scheduler.shutdown()
-
-
-index = int(sys.argv[1])
-# index = 0
-single_scheduler(index)
+# index = int(sys.argv[1])
+index = 0
+words = get_words(index)
+job_instance = Instance(words, index)
+while True:
+    beg = time.time()
+    job_instance.track()
+    count += 1
+    print('{}th over. '.format(count))
+    time.sleep(YConfig.TRACK_SPAN - (time.time() - beg))

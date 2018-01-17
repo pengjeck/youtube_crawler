@@ -8,7 +8,7 @@ import atexit
 
 command = [
     '/home/pj/datum/GraduationProject/pyenv/bin/python',
-    '/home/pj/datum/GraduationProject/code/youtube/track.py',
+    '/home/pj/datum/GraduationProject/code/youtube_crawler/track.py',
     '1'
 ]
 fls = []
@@ -18,7 +18,7 @@ for i in range(100):
     fl = subprocess.Popen(command)
     fls.append(fl)
     print("{}th progress started pid={}".format(i, fl.pid))
-    time.sleep(200)
+    time.sleep(420)  # 7分钟重新请求一次
 
 
 def kills():

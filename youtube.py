@@ -137,8 +137,7 @@ class VideoPage:
     parse video page content
     """
 
-    def __init__(self, video_id, db):
-        self.db = db
+    def __init__(self, video_id):
         self.video_id = video_id
         self.time = None
         self.views = -1
@@ -147,6 +146,7 @@ class VideoPage:
         self.comments = -1
         self.data = ''
         self.is_finish = False
+        self.is_removed = False
 
         self.setup()
 
@@ -171,8 +171,8 @@ class VideoPage:
             logger.error('value error occur. Reason:{}'.format(v_e))
             self.is_finish = False
         except VideoRemoved as vr_e:
-            self.db.remove_video(self.video_id)
             self.is_finish = False
+            self.is_removed = True
             logger.error('video removed. video id = {}. Reason:{}'.format(self.video_id, vr_e))
 
     def http_request(self):
@@ -215,7 +215,10 @@ class VideoPage:
                     raise VideoRemoved('this video has been removed by the user.')
                 elif self.data.find('live stream recording is not available') != -1:
                     raise ValueError('This live stream recording is not available.')
+                elif self.data.find('This video contains content from') != -1:
+                    raise VideoRemoved('this video contain some thing bad')
                 else:
+                    record_data(self.data, type='html')
                     raise ValueError('cannot find view_count in self.data')
             row_views = row_views.group(0)[14:-1]
             self.views = int(row_views)
