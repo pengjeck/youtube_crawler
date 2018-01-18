@@ -91,9 +91,6 @@ class Instance:
         # self.video_ids = list(set(self.video_ids))
 
 
-count = 0
-
-
 def get_words(part_index):
     file_path = '/home/pj/datum/GraduationProject/dataset/google-10000-english/parts/part{}_google_10000.txt'.format(
         part_index)
@@ -101,13 +98,30 @@ def get_words(part_index):
         return f.readline().split('|')
 
 
-# index = int(sys.argv[1])
-index = 0
-words = get_words(index)
-job_instance = Instance(words, index)
-while True:
-    beg = time.time()
+# 全局的变量
+job_instance = None
+base_words_path = ''
+
+
+def tick():
     job_instance.track()
-    count += 1
-    print('{}th over. '.format(count))
-    time.sleep(YConfig.TRACK_SPAN - (time.time() - beg))
+
+
+def single_scheduler(i):
+    global job_instance
+    words = get_words(i)
+    job_instance = Instance(words, index)
+    scheduler = BlockingScheduler()
+    scheduler.add_executor('processpool')
+    # scheduler.add_job(tick, 'interval', seconds=200)
+    scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        print('process has exit!!!')
+        scheduler.shutdown()
+
+
+index = int(sys.argv[1])
+# index = 0
+single_scheduler(index)

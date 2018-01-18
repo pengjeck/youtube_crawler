@@ -3,6 +3,7 @@ youtube request module
 """
 # coding: utf-8
 import re
+import time
 from datetime import datetime
 import json
 import requests
@@ -156,6 +157,7 @@ class VideoPage:
             code = self.http_request()
             if code == 1:
                 # 再试一次
+                time.sleep(1)
                 re_code = self.http_request()
                 if re_code == 0:
                     self.parse()
@@ -194,7 +196,7 @@ class VideoPage:
             return -1
         except requests.ConnectionError:
             logger.error('connection error occur when request video page')
-            return -1
+            return 1
         except requests.exceptions.ChunkedEncodingError as chunk_e:
             logger.error('requests.exceptions.ChunkedEncodingError occur {}'.format(chunk_e))
             return 1
@@ -218,7 +220,6 @@ class VideoPage:
                 elif self.data.find('This video contains content from') != -1:
                     raise VideoRemoved('this video contain some thing bad')
                 else:
-                    record_data(self.data, type='html')
                     raise ValueError('cannot find view_count in self.data')
             row_views = row_views.group(0)[14:-1]
             self.views = int(row_views)

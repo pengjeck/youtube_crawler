@@ -111,5 +111,3 @@ class SqlYoutube:
         except sqlite3.DatabaseError as db_e:
             logger.error('cannot delete video = {} from video table msg:{}'.format(video_id, db_e))
             return -1
-
-
