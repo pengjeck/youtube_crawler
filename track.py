@@ -53,7 +53,6 @@ class Instance:
         :param is_first: is the first time to run this data.
         :return:
         """
-        # print('run track')
         if is_first:
             for video_id in self.video_ids:
                 temp = Tempor(video_id, datetime.utcnow(), 0, 0, 0, 0)
@@ -65,7 +64,6 @@ class Instance:
 
             for video in videos:
                 if video.is_removed:
-                    # self.db.remove_video(video.video_id)
                     self.video_ids.remove(video.video_id)
                     continue
 
