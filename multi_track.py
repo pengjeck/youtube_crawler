@@ -5,10 +5,21 @@ track diff video's data and save to database with multiprocess
 import subprocess
 import time
 import atexit
+import os
+
+# region create some need
+base_path = '/home/pj'
+os.mkdir(path='/home/pj/dataset/')
+os.mkdir(path='/home/pj/dataset/user_avatar')
+os.mkdir(path='/home/pj/dataset/video_avatar')
+os.mkdir(path='/home/pj/dataset/logging')
+os.mkdir(path='/home/pj/dataset/video')
+os.mkdir(path='')
+# endregion
 
 command = [
-    '/home/pj/datum/GraduationProject/pyenv/bin/python',
-    '/home/pj/datum/GraduationProject/code/youtube_crawler/track.py',
+    '/home/pj/pyenv/bin/python',
+    '/home/pj/youtube_crawler/track.py',
     '1'
 ]
 fls = []

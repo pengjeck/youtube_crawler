@@ -13,7 +13,7 @@ class YConfig:
     """
     youtube crawler config file
     """
-    DB_FILE = '/home/pj/datum/GraduationProject/dataset/youtube/database/youtube_{}.db'
+    DB_FILE = '/home/pj/dataset/youtube/database/youtube_{}.db'
 
     @staticmethod
     def get_db_file(index):
@@ -25,11 +25,11 @@ class YConfig:
         # 建立100个数据库，这里的设定是，不同的数据库可能跟踪到了相同视频信息
         return YConfig.DB_FILE.format(index)
 
-    USER_AVATAR_PATH = '/home/pj/datum/GraduationProject/dataset/youtube/user_avatar/'
-    VIDEO_AVATAR_PATH = '/home/pj/datum/GraduationProject/dataset/youtube/video_avatar/'
-    LOGGING_PATH = '/home/pj/datum/GraduationProject/dataset/youtube/logging/'
+    USER_AVATAR_PATH = '/home/pj/dataset/youtube/user_avatar/'
+    VIDEO_AVATAR_PATH = '/home/pj/dataset/youtube/video_avatar/'
+    LOGGING_PATH = '/home/pj/dataset/youtube/logging/'
 
-    GOOGLE10000ENGLISH = '/home/pj/datum/GraduationProject/dataset/google-10000-english/google-10000-english.txt'
+    GOOGLE10000ENGLISH = '/home/pj/dataset/google-10000-english/google-10000-english.txt'
     IS_TESTING = True
 
     # key 应该是够用的
@@ -46,11 +46,6 @@ class YConfig:
         'AIzaSyCC1joQQWQzjss0Lf4eP52jhRUTYfUdj5I',  # 8
         'AIzaSyDWwi4ccCyJyJ3KSFMxd-gl1A19ZKjVh4o'  # 9
     ]
-
-    PROXIES = {
-        'http': 'socks5://127.0.0.1:1081',
-        'https': 'socks5://127.0.0.1:1081'
-    }
 
     SEARCH_PAGE_SIZE = 15  # youtube search api page size
 
@@ -71,7 +66,6 @@ class YConfig:
 
 logger = logging.getLogger('base')
 formatter = logging.Formatter('%(asctime)s - %(message)s')
-
 
 fh = logging.FileHandler(YConfig.logging_file())
 fh.setLevel(logging.INFO)
