@@ -5,18 +5,7 @@ track diff video's data and save to database with multiprocess
 import subprocess
 import time
 import atexit
-import os
 from config import YConfig
-
-# region create some need
-base_path = '/home/pj'
-os.mkdir(path='/home/pj/dataset/')
-os.mkdir(path='/home/pj/dataset/user_avatar')
-os.mkdir(path='/home/pj/dataset/video_avatar')
-os.mkdir(path='/home/pj/dataset/logging')
-os.mkdir(path='/home/pj/dataset/video')
-os.mkdir(path='')
-# endregion
 
 command = [
     'python',
