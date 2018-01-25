@@ -6,6 +6,7 @@ import subprocess
 import time
 import atexit
 import os
+from config import YConfig
 
 # region create some need
 base_path = '/home/pj'
@@ -18,7 +19,7 @@ os.mkdir(path='')
 # endregion
 
 command = [
-    '/home/pj/pyenv/bin/python',
+    'python',
     '/home/pj/youtube_crawler/track.py',
     '1'
 ]
@@ -29,7 +30,7 @@ for i in range(100):
     fl = subprocess.Popen(command)
     fls.append(fl)
     print("{}th progress started pid={}".format(i, fl.pid))
-    time.sleep(420)  # 7分钟重新请求一次
+    time.sleep(YConfig.BEFORE_TIMEDELTA)  # 7分钟重新请求一次
 
 
 def kills():

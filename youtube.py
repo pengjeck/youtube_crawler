@@ -38,7 +38,6 @@ class SearchPage:
     def __init__(self, query_string):
         self.query_string = query_string
         self._max_results = YConfig.SEARCH_PAGE_SIZE
-        self._after_delta = YConfig.BEFORE_TIMEDELTA
         self.data = None
         self.vid_ids = []
         self.vids = []
@@ -60,11 +59,10 @@ class SearchPage:
             'type': 'video',
             'maxResults': self._max_results,
             'key': YConfig.KEYS[self.key_index],
-            'publishedAfter': time_rfc3339(self._after_delta)
+            'publishedAfter': time_rfc3339(YConfig.BEFORE_TIMEDELTA)
         }
         try:
             req = requests.get(search_url, params=params,
-                               proxies=YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = json.loads(req.text)
             if 'error' in self.data:
@@ -184,7 +182,6 @@ class VideoPage:
         }
         try:
             req = requests.get(video_url, params=params,
-                               proxies=YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = req.text
             return 0
@@ -280,5 +277,5 @@ class UserPage:
         :param user_id: user's id
         """
         user_url = 'https://www.youtube.com/channel/{}'.format(user_id)
-        data = requests.get(user_url, proxies=YConfig.PROXIES)
+        data = requests.get(user_url)
         return data

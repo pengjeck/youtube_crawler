@@ -29,7 +29,7 @@ class YConfig:
     VIDEO_AVATAR_PATH = '/home/pj/dataset/youtube/video_avatar/'
     LOGGING_PATH = '/home/pj/dataset/youtube/logging/'
 
-    GOOGLE10000ENGLISH = '/home/pj/dataset/google-10000-english/google-10000-english.txt'
+    GOOGLE10000 = '/home/pj/youtube_crawler/google_10000/part{}_google_10000.txt'
     IS_TESTING = True
 
     # key 应该是够用的

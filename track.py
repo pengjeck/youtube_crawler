@@ -90,8 +90,7 @@ class Instance:
 
 
 def get_words(part_index):
-    file_path = '/home/pj/datum/GraduationProject/dataset/google-10000-english/parts/part{}_google_10000.txt'.format(
-        part_index)
+    file_path = YConfig.GOOGLE10000.format(part_index)
     with open(file_path, 'r') as f:
         return f.readline().split('|')
 
