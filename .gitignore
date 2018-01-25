@@ -106,6 +106,5 @@ parse_video.json
 html.html
 .idea/
 log
-database
-tools/parts
+dbs
 try/
