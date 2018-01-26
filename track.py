@@ -1,6 +1,3 @@
-"""
-track diff video's data and save to database
-"""
 # coding: utf-8
 import time
 from datetime import datetime

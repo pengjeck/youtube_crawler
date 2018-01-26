@@ -1,7 +1,4 @@
-"""
-toolbox
-"""
-# conding: utf-8
+# coding: utf-8
 import json
 from datetime import datetime
 import re
@@ -88,7 +85,7 @@ def read_google_10000_english(num):
 
     res = []
     if num == 'all':
-        with open(YConfig.GOOGLE10000ENGLISH, 'r') as google_f:
+        with open(YConfig.GOOGLE10000, 'r') as google_f:
             while True:
                 line = google_f.readline().strip()
                 if len(line) < 1:
@@ -101,7 +98,7 @@ def read_google_10000_english(num):
 
         if num >= 10000:
             num = 'all'
-        with open(YConfig.GOOGLE10000ENGLISH, 'r') as google_f:
+        with open(YConfig.GOOGLE10000, 'r') as google_f:
             for _ in range(num):
                 line = google_f.readline().strip()
                 res.append(line)
@@ -124,7 +121,7 @@ def read_google_10000_range(beg_index, end_index):
         return []
 
     res = []
-    with open(YConfig.GOOGLE10000ENGLISH, 'r') as google_f:
+    with open(YConfig.GOOGLE10000, 'r') as google_f:
         count = 0
         while True:
             line = google_f.readline()

@@ -1,6 +1,3 @@
-"""
-track diff video's data and save to database with multiprocess
-"""
 # coding: utf-8
 import subprocess
 import time

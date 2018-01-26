@@ -1,8 +1,3 @@
-"""
-in this module, I define a obj change, which record the change infomation of a video in a timestamp.
-"""
-
-
 # coding:utf-8
 
 
