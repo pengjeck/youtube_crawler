@@ -30,8 +30,5 @@ def kills():
 atexit.register(kills)
 
 while True:
-    q = input()
-    if q == 'q':
-        break
-
-print('end')
+    time.sleep(10000)
+    print('part')
