@@ -10,7 +10,7 @@ class YConfig:
     """
     youtube crawler config file
     """
-    DB_FILE = '/home/pj/dataset/youtube/database/youtube_{}.db'
+    DB_FILE = '/home/pj/dataset/database/youtube_{}.db'
 
     @staticmethod
     def get_db_file(index):
@@ -22,9 +22,9 @@ class YConfig:
         # 建立100个数据库，这里的设定是，不同的数据库可能跟踪到了相同视频信息
         return YConfig.DB_FILE.format(index)
 
-    USER_AVATAR_PATH = '/home/pj/dataset/youtube/user_avatar/'
-    VIDEO_AVATAR_PATH = '/home/pj/dataset/youtube/video_avatar/'
-    LOGGING_PATH = '/home/pj/dataset/youtube/logging/'
+    USER_AVATAR_PATH = '/home/pj/dataset/user_avatar/'
+    VIDEO_AVATAR_PATH = '/home/pj/dataset/video_avatar/'
+    LOGGING_PATH = '/home/pj/dataset/logging/'
 
     GOOGLE10000 = '/home/pj/youtube_crawler/google_10000/part{}_google_10000.txt'
     IS_TESTING = True

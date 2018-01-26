@@ -17,11 +17,6 @@ def time_rfc3339(delta, now=None):
     return (now - delta).isoformat('T')[:-7] + 'Z'
 
 
-# def to_utc(date):
-#     """convert datetime's timezone to utc"""
-#     return date.astimezone(timezone('utc'))
-
-
 def youtube_timedecoder(time_str):
     """
     parse youtube time string
