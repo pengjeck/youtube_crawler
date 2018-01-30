@@ -1,6 +1,3 @@
-"""
-test module
-"""
 # coding: utf-8
 from youtube import SearchPage
 from utilities import record_data

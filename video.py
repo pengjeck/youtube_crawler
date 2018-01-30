@@ -1,8 +1,3 @@
-"""
-we define a video object to record video information.
-"""
-
-
 # coding: utf-8
 
 

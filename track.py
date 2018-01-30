@@ -1,6 +1,3 @@
-"""
-track diff video's data and save to database
-"""
 # coding: utf-8
 import time
 from datetime import datetime
@@ -90,8 +87,7 @@ class Instance:
 
 
 def get_words(part_index):
-    file_path = '/home/pj/datum/GraduationProject/dataset/google-10000-english/parts/part{}_google_10000.txt'.format(
-        part_index)
+    file_path = YConfig.GOOGLE10000.format(part_index)
     with open(file_path, 'r') as f:
         return f.readline().split('|')
 
@@ -111,15 +107,16 @@ def single_scheduler(i):
     job_instance = Instance(words, index)
     scheduler = BlockingScheduler()
     scheduler.add_executor('processpool')
-    # scheduler.add_job(tick, 'interval', seconds=200)
-    scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
+    scheduler.add_job(tick, 'interval', seconds=200)
+    # scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
         print('process has exit!!!')
         scheduler.shutdown()
 
-
-index = int(sys.argv[1])
-# index = 0
+import os
+print(os.getpid())
+# index = int(sys.argv[1])
+index = 0
 single_scheduler(index)

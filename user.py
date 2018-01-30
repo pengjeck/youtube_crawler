@@ -1,8 +1,3 @@
-"""
-in this module, I define a obj user, which record user's infomation.
-"""
-
-
 # coding:utf-8
 
 
