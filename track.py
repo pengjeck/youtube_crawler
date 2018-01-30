@@ -1,32 +1,27 @@
-"""
-track diff video's data and save to database
-"""
 # coding: utf-8
-import time
 from datetime import datetime
 import sqlite3
-from youtube import SearchPage, VideoPage
-from database import SqlYoutube
-from tempor import Tempor
+from youtube import SearchPage, parse_video_page
+from database import get_session, Tempor
 from config import logger, YConfig
 from apscheduler.schedulers.blocking import BlockingScheduler
 from multiprocessing import Pool
 import sys
+import os
 
 
 class Instance:
     """a track instance for adjust the params"""
 
     def __init__(self, words, part_index):
-        self.db = SqlYoutube(part_index)
+        self.sess = get_session(part_index)
         self.video_ids = []
-        self._words = words
-        self._setup()
+        self._setup(words)
         self.track(is_first=True)
 
-    def _setup(self):
+    def _setup(self, words):
         with Pool(YConfig.PROCESSES_NUM) as p:
-            search_pages = p.map(SearchPage, self._words)
+            search_pages = p.map(SearchPage, words)
 
         for search_page in search_pages:
             # if this search page is empty
@@ -35,17 +30,19 @@ class Instance:
 
             no_duplication_index = []
             for (part_index, vid) in enumerate(search_page.vids):
+
                 try:
-                    self.db.insert(vid, is_commit=False)
+                    self.sess.merge(vid)
                     no_duplication_index.append(part_index)
                 except sqlite3.IntegrityError as sqlite_ie:
                     logger.info('video id={} duplicated! msg:{}'.format(vid.video_id,
                                                                         sqlite_ie))
-            self.db.conn.commit()
-            self.video_ids.extend([search_page.vid_ids[index]
-                                   for index in no_duplication_index])
+            self.sess.commit()
+            self.video_ids.extend([search_page.vid_ids[i]
+                                   for i in no_duplication_index])
         # remove some duplicate video in this
         self.video_ids = list(set(self.video_ids))
+        self.sess.commit()
 
     def track(self, is_first=False):
         """
@@ -54,51 +51,38 @@ class Instance:
         :return:
         """
         if is_first:
+            now = datetime.utcnow()
             for video_id in self.video_ids:
-                temp = Tempor(video_id, datetime.utcnow(), 0, 0, 0, 0)
-                self.db.insert(temp, is_commit=False)
+                self.sess.add(Tempor(video_id=video_id,
+                                     time=now,
+                                     views=0,
+                                     likes=0,
+                                     dislikes=0,
+                                     comments=0))
         else:
-            beg = time.time()
+            now = datetime.utcnow()
             with Pool(YConfig.PROCESSES_NUM) as p:
-                videos = p.map(VideoPage, self.video_ids)
+                video_pages = p.map(parse_video_page, self.video_ids)
 
-            for video in videos:
-                if video.is_removed:
-                    self.video_ids.remove(video.video_id)
-                    continue
-
-                if not video.is_finish:
-                    continue
-
-                temp = Tempor(video.video_id, datetime.utcnow(), video.views,
-                              video.likes, video.dislikes,
-                              video.comments)
-                self.db.insert(temp, is_commit=False)
-
-            logger.info("[{}] round with {} video cost: {}".format(
-                datetime.now(), len(self.video_ids),
-                time.time() - beg))
-        self.db.conn.commit()
-
-    def search_test(self):
-        temp_video_ids = []
-        for word in self._words:
-            search_page = SearchPage(word)
-            temp_video_ids.extend(search_page.vid_ids)
-        print(list(set(temp_video_ids)))
-        # self.video_ids = list(set(self.video_ids))
+            for video_page in video_pages:
+                temp = Tempor(video_id=video_page['video_id'],
+                              time=now,
+                              views=video_page['views'],
+                              likes=video_page['likes'],
+                              dislikes=video_page['dislikes'],
+                              comments=-1)
+                self.sess.add(temp)
+        self.sess.commit()
 
 
 def get_words(part_index):
-    file_path = '/home/pj/datum/GraduationProject/dataset/google-10000-english/parts/part{}_google_10000.txt'.format(
-        part_index)
+    file_path = YConfig.GOOGLE10000.format(part_index)
     with open(file_path, 'r') as f:
         return f.readline().split('|')
 
 
 # 全局的变量
 job_instance = None
-base_words_path = ''
 
 
 def tick():
@@ -109,6 +93,9 @@ def single_scheduler(i):
     global job_instance
     words = get_words(i)
     job_instance = Instance(words, index)
+    del words
+
+    # print(len(job_instance.video_ids))
     scheduler = BlockingScheduler()
     scheduler.add_executor('processpool')
     # scheduler.add_job(tick, 'interval', seconds=200)
@@ -120,6 +107,7 @@ def single_scheduler(i):
         scheduler.shutdown()
 
 
+# print(os.getpid())
 index = int(sys.argv[1])
-# index = 0
+# index = 1
 single_scheduler(index)
