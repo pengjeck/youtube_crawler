@@ -3,8 +3,6 @@
 import sys
 import time
 
-progress_pid = sys.argv[1]
-
 
 def get_status(pid):
     status = {}
@@ -18,14 +16,10 @@ def get_status(pid):
     return status
 
 
-def track(pid, times=100, time_span=100):
+def track(pid, times=100000, time_span=1):
     for _ in range(times):
-        now = time.time()
-        print("now: {}\n vmrss:{} \n rssanon:{}\n rssfile:{}".format(now,
-                                                                     get_status(pid)['VmRSS'],
-                                                                     get_status(pid)['RssAnon'],
-                                                                     get_status(pid)['RssFile']))
+        print(get_status(pid)['VmRSS'])
         time.sleep(time_span)
 
 
-track(2781)
+track(14730)

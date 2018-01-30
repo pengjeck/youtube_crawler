@@ -36,4 +36,4 @@ def http_request(video_id):
         return 1
 
 
-http_request('yXWGzzwV4zA')
+req = http_request('yXWGzzwV4zA')

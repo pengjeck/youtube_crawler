@@ -156,6 +156,7 @@ def parse_video_page(video_id):
         if req.status_code != 200:
             return res
         data = req.text
+
         # region for views and check some error
         try:
             raw_views = re.search('"view_count":"\d+"', data)
@@ -179,16 +180,16 @@ def parse_video_page(video_id):
         except ValueError:
             return res
 
-            # endregion for view
+        # endregion for view
 
         # region for likes
         raw_likes = re.search('like this video along with [\d,]+ other', data)
         raw_likes = raw_likes.group(0)
-        data = re.search('\d+', raw_likes.replace(',', ''))
-        if data is None:
+        temp = re.search('\d+', raw_likes.replace(',', ''))
+        if temp is None:
             res['likes'] = -1
         else:
-            res['likes'] = int(data.group(0))
+            res['likes'] = int(temp.group(0))
 
         # endregion for dislikes
 

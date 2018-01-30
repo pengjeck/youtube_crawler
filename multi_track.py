@@ -4,12 +4,14 @@ import time
 import atexit
 from config import YConfig
 import sys
+import os
 
 command = [
-    '/home/pj/pyenv/bin/python',
-    '/home/pj/youtube_crawler/track.py',
+    '/home/pj/pro/python/youtube_crawler/pyenv/bin/python',
+    '/home/pj/pro/python/youtube_crawler/track.py',
     '1'
 ]
+print(os.getpid())
 fls = []
 beg_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
@@ -19,6 +21,7 @@ for i in range(beg_index, end_index):
     fls.append(fl)
     print("{}th progress started pid={}".format(i, fl.pid))
     time.sleep(YConfig.BEFORE_TIMEDELTA.seconds)  # 7分钟重新请求一次
+    # time.sleep(200)
 
 
 def kills():

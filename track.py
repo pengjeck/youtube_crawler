@@ -1,5 +1,4 @@
 # coding: utf-8
-import time
 from datetime import datetime
 import sqlite3
 from youtube import SearchPage, parse_video_page
@@ -8,9 +7,7 @@ from config import logger, YConfig
 from apscheduler.schedulers.blocking import BlockingScheduler
 from multiprocessing import Pool
 import sys
-import objgraph
 import os
-from pympler import tracker
 
 
 class Instance:
@@ -19,13 +16,12 @@ class Instance:
     def __init__(self, words, part_index):
         self.sess = get_session(part_index)
         self.video_ids = []
-        self._words = words
-        self._setup()
+        self._setup(words)
         self.track(is_first=True)
 
-    def _setup(self):
+    def _setup(self, words):
         with Pool(YConfig.PROCESSES_NUM) as p:
-            search_pages = p.map(SearchPage, self._words)
+            search_pages = p.map(SearchPage, words)
 
         for search_page in search_pages:
             # if this search page is empty
@@ -65,21 +61,15 @@ class Instance:
                                      comments=0))
         else:
             now = datetime.utcnow()
-            # objgraph.show_growth()
             with Pool(YConfig.PROCESSES_NUM) as p:
                 video_pages = p.map(parse_video_page, self.video_ids)
-            # objgraph.show_growth()
 
             for video_page in video_pages:
-                # view出现了错误,把这条记录删除掉
-                if video_page['code'] == 2:
-                    continue
-
-                temp = Tempor(video_id=video_page.video_id,
+                temp = Tempor(video_id=video_page['video_id'],
                               time=now,
-                              views=video_page.views,
-                              likes=video_page.likes,
-                              dislikes=video_page.dislikes,
+                              views=video_page['views'],
+                              likes=video_page['likes'],
+                              dislikes=video_page['dislikes'],
                               comments=-1)
                 self.sess.add(temp)
         self.sess.commit()
@@ -93,28 +83,23 @@ def get_words(part_index):
 
 # 全局的变量
 job_instance = None
-base_words_path = ''
-profile_path = 'dataset/profile.txt'
 
 
 def tick():
-    print("===========================")
-    time1 = tk.create_summary()
     job_instance.track()
-    time2 = tk.create_summary()
-    tk.print_diff(time1, time2)
-    print("---------------------------")
-    objgraph.show_growth()
 
 
 def single_scheduler(i):
     global job_instance
     words = get_words(i)
     job_instance = Instance(words, index)
+    del words
+
+    # print(len(job_instance.video_ids))
     scheduler = BlockingScheduler()
     scheduler.add_executor('processpool')
-    scheduler.add_job(tick, 'interval', seconds=100)
-    # scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
+    # scheduler.add_job(tick, 'interval', seconds=200)
+    scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
@@ -122,8 +107,7 @@ def single_scheduler(i):
         scheduler.shutdown()
 
 
-tk = tracker.SummaryTracker()
-print(os.getpid())
-# index = int(sys.argv[1])
-index = 1
+# print(os.getpid())
+index = int(sys.argv[1])
+# index = 1
 single_scheduler(index)

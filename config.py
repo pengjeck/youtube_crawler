@@ -49,7 +49,7 @@ class YConfig:
         'AIzaSyDWwi4ccCyJyJ3KSFMxd-gl1A19ZKjVh4o'  # 9
     ]
 
-    SEARCH_PAGE_SIZE = 5  # youtube search api page size
+    SEARCH_PAGE_SIZE = 15  # youtube search api page size
 
     TRACK_SPAN = 900  # 15 * 60 = 900 minute. 默认15分钟记录一次
     TIMEOUT = 3  # 4秒的超时时间
