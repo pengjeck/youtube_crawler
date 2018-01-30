@@ -60,6 +60,7 @@ class SearchPage:
         }
         try:
             req = requests.get(search_url, params=params,
+                                proxies = YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = json.loads(req.text)
             if 'error' in self.data:
@@ -179,6 +180,7 @@ class VideoPage:
         }
         try:
             req = requests.get(video_url, params=params,
+                               proxies=YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = req.text
             return 0

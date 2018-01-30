@@ -1,9 +1,9 @@
 # coding: utf-8
 import os
 
-os.mkdir(path='/home/pj/dataset/')
-os.mkdir(path='/home/pj/dataset/user_avatar')
-os.mkdir(path='/home/pj/dataset/video_avatar')
-os.mkdir(path='/home/pj/dataset/logging')
-os.mkdir(path='/home/pj/dataset/video')
-os.mkdir(path='/home/pj/dataset/database')
+os.mkdir(path='dataset/')
+os.mkdir(path='dataset/user_avatar')
+os.mkdir(path='dataset/video_avatar')
+os.mkdir(path='dataset/logging')
+os.mkdir(path='dataset/video')
+os.mkdir(path='dataset/database')

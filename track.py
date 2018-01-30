@@ -107,15 +107,16 @@ def single_scheduler(i):
     job_instance = Instance(words, index)
     scheduler = BlockingScheduler()
     scheduler.add_executor('processpool')
-    # scheduler.add_job(tick, 'interval', seconds=200)
-    scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
+    scheduler.add_job(tick, 'interval', seconds=200)
+    # scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
         print('process has exit!!!')
         scheduler.shutdown()
 
-
-index = int(sys.argv[1])
-# index = 0
+import os
+print(os.getpid())
+# index = int(sys.argv[1])
+index = 0
 single_scheduler(index)
