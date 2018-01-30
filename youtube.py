@@ -5,9 +5,8 @@ from datetime import datetime
 import json
 import requests
 from utilities import youtube_timedecoder, time_rfc3339, record_data
-from video import Video
+from database import Video
 from config import logger, YConfig
-from myexception import VideoRemoved
 
 
 def avatar_url_parse(item, avatar_type):
@@ -60,6 +59,7 @@ class SearchPage:
         }
         try:
             req = requests.get(search_url, params=params,
+                               proxies=YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = json.loads(req.text)
             if 'error' in self.data:
@@ -113,11 +113,14 @@ class SearchPage:
                 continue
             try:
                 vid_id = item['id']['videoId']
-                vid = Video(vid_id)
-                vid.avatar_url = avatar_url_parse(item, 'video')
-                vid.des = item['snippet']['description']
-                vid.title = item['snippet']['title']
-                vid.upload_time = youtube_timedecoder(item['snippet']['publishedAt'])
+                vid = Video(video_id=vid_id,
+                            user_id='',
+                            title=item['snippet']['title'],
+                            upload_time=youtube_timedecoder(item['snippet']['publishedAt']),
+                            avatar_path='',
+                            avatar_url=avatar_url_parse(item, 'video'),
+                            des=item['snippet']['description'])
+
                 self.vids.append(vid)
                 self.vid_ids.append(vid_id)
             except TypeError as type_e:
@@ -128,137 +131,71 @@ class SearchPage:
                 logger.error("[{}] error occur when parsing video, msg:{}".format(datetime.now(), key_e))
 
 
-class VideoPage:
-    """
-    parse video page content
-    """
-
-    def __init__(self, video_id):
-        self.video_id = video_id
-        self.time = None
-        self.views = -1
-        self.likes = -1
-        self.dislikes = -1
-        self.comments = -1
-        self.data = ''
-        self.is_finish = False
-        self.is_removed = False
-
-        self.setup()
-
-    def setup(self):
-        """setup"""
-        try:
-            code = self.http_request()
-            if code == 1:
-                # 再试一次
-                time.sleep(1)
-                re_code = self.http_request()
-                if re_code == 0:
-                    self.parse()
-                    self.is_finish = True
-                else:
-                    self.is_finish = False
-            elif code == 0:
-                self.parse()
-                self.is_finish = True
-            else:
-                self.is_finish = False
-        except ValueError as v_e:
-            logger.error('value error occur. Reason:{}'.format(v_e))
-            self.is_finish = False
-        except VideoRemoved as vr_e:
-            self.is_finish = False
-            self.is_removed = True
-            logger.error('video removed. video id = {}. Reason:{}'.format(self.video_id, vr_e))
-
-    def http_request(self):
+def parse_video_page(video_id):
+    res = {
+        'video_id': video_id
+    }
+    try:
         video_url = 'https://www.youtube.com/watch'
         params = {
-            'v': self.video_id
+            'v': video_id
         }
-        try:
-            req = requests.get(video_url, params=params,
-                               timeout=YConfig.TIMEOUT)
-            self.data = req.text
-            return 0
-        except requests.HTTPError as http_e:
-            logger.error('network error when request video page. Reason:{}'.format(http_e))
-            return -1
-        except requests.Timeout:
-            logger.error('time out when request video page. ')
-            return -1
-        except requests.ConnectionError:
-            logger.error('connection error occur when request video page')
-            return 1
-        except requests.exceptions.ChunkedEncodingError as chunk_e:
-            logger.error('requests.exceptions.ChunkedEncodingError occur {}'.format(chunk_e))
-            return 1
+        req = requests.get(video_url, params=params,
+                           proxies=YConfig.PROXIES,
+                           timeout=YConfig.TIMEOUT)
+        if req.status_code != 200:
+            return res
 
-    def parse(self):
-        # 解析
-        self.parse_views()
-        self.parse_likes()
-        self.parse_dislikes()
-        self.parse_comments()
+        data = req.text
+        # region for views and check some error
+        raw_views = re.search('"view_count":"\d+"', data)
+        if raw_views is None:
+            if data.find('has been removed') != -1:
+                logger.error('video has been removed!!!')
+                return res
+            elif data.find('live stream recording is not available') != -1:
+                logger.error('This live stream recording is not available.')
+                return res
+            elif data.find('This video contains content from') != -1:
+                logger.error('this video contain some thing bad')
+                return res
+            else:
+                logger.error('cannot find view_count in self.data')
+                return res
+        res['views'] = int(raw_views.group(0)[14:-1])
+        # endregion for view
 
-    def parse_views(self):
-        """parse view count to self.views"""
-        try:
-            row_views = re.search('"view_count":"\d+"', self.data)
-            if row_views is None:
-                if self.data.find('has been removed') != -1:
-                    raise VideoRemoved('this video has been removed by the user.')
-                elif self.data.find('live stream recording is not available') != -1:
-                    raise ValueError('This live stream recording is not available.')
-                elif self.data.find('This video contains content from') != -1:
-                    raise VideoRemoved('this video contain some thing bad')
-                else:
-                    raise ValueError('cannot find view_count in self.data')
-            row_views = row_views.group(0)[14:-1]
-            self.views = int(row_views)
-        except AttributeError:
-            logger.error('attribution error occur when parsing view')
-            record_data(self.data, type='html')
+        # region for likes
+        raw_likes = re.search('like this video along with [\d,]+ other', data)
+        raw_likes = raw_likes.group(0)
+        data = re.search('\d+', raw_likes.replace(',', ''))
+        if data is None:
+            res['likes'] = -1
+        else:
+            res['likes'] = int(data.group(0))
 
-    def parse_likes(self):
-        """parse like count to self.likes"""
-        try:
-            row_likes = re.search('like this video along with [\d,]+ other', self.data)
-            if row_likes is None:
-                if self.data.find('has been removed') != -1:
-                    raise VideoRemoved('this video has been removed by the user.')
-                elif self.data.find('live stream recording is not available') != -1:
-                    raise ValueError('This live stream recording is not available.')
-                else:
-                    raise ValueError('cannot find likes in self.data')
-            row_likes = row_likes.group(0)
-            data = re.search('\d+', row_likes.replace(',', ''))
-            if data is None:
-                raise ValueError('cannot find likes in sub self.data')
+        # endregion for dislikes
 
-            self.likes = int(data.group(0))
-        except AttributeError:
-            logger.error('attribution error occur when parsing likes')
-            record_data(self.data, type='html')
+        # region for dislikes
 
-    def parse_dislikes(self):
-        """parse dislike count to self.dislikes"""
-        try:
-            row_dislikes = re.search('dislike this video along with [\d,]+ other', self.data)
-            if row_dislikes is None:
-                raise ValueError('cannot find dislikes in self.data')
-            row_dislikes = row_dislikes.group(0)
-            self.dislikes = int(re.search('\d+', row_dislikes.replace(',', '')).group(0))
-        except AttributeError:
-            logger.error('attribution error occur when parsing dislikes')
-            record_data(self.data, type='html')
+        raw_dislikes = re.search('dislike this video along with [\d,]+ other', data)
+        if raw_dislikes is None:
+            res['dislikes'] = -1
+        else:
+            row_dislikes = raw_dislikes.group(0)
+            res['dislikes'] = int(re.search('\d+', row_dislikes.replace(',', '')).group(0))
 
-    def parse_comments(self):
-        """
-        do not finish this method
-        """
-        self.comments = -1
+        # endregion for dislikes
+    except (requests.HTTPError, requests.ConnectionError,
+            requests.Timeout, requests.exceptions.ChunkedEncodingError):
+        logger('network error!')
+    except ValueError as v_e:
+        logger.error('value error occur. Reason:{}'.format(v_e))
+
+    except AttributeError as attr_e:
+        logger.error('attribute error occur. reason: {}'.format(attr_e))
+    finally:
+        return res
 
 
 class UserPage:

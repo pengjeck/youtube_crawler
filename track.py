@@ -3,19 +3,22 @@ import time
 from datetime import datetime
 import sqlite3
 from youtube import SearchPage, VideoPage
-from database import SqlYoutube
-from tempor import Tempor
+from database import get_session, Tempor
 from config import logger, YConfig
 from apscheduler.schedulers.blocking import BlockingScheduler
 from multiprocessing import Pool
 import sys
+import objgraph
+import os
+from sqlalchemy.orm.exc import FlushError
+from pympler import tracker
 
 
 class Instance:
     """a track instance for adjust the params"""
 
     def __init__(self, words, part_index):
-        self.db = SqlYoutube(part_index)
+        self.sess = get_session(part_index)
         self.video_ids = []
         self._words = words
         self._setup()
@@ -32,17 +35,19 @@ class Instance:
 
             no_duplication_index = []
             for (part_index, vid) in enumerate(search_page.vids):
+
                 try:
-                    self.db.insert(vid, is_commit=False)
+                    self.sess.merge(vid)
                     no_duplication_index.append(part_index)
                 except sqlite3.IntegrityError as sqlite_ie:
                     logger.info('video id={} duplicated! msg:{}'.format(vid.video_id,
                                                                         sqlite_ie))
-            self.db.conn.commit()
-            self.video_ids.extend([search_page.vid_ids[index]
-                                   for index in no_duplication_index])
+            self.sess.commit()
+            self.video_ids.extend([search_page.vid_ids[i]
+                                   for i in no_duplication_index])
         # remove some duplicate video in this
         self.video_ids = list(set(self.video_ids))
+        self.sess.commit()
 
     def track(self, is_first=False):
         """
@@ -51,14 +56,21 @@ class Instance:
         :return:
         """
         if is_first:
+            now = datetime.utcnow()
             for video_id in self.video_ids:
-                temp = Tempor(video_id, datetime.utcnow(), 0, 0, 0, 0)
-                self.db.insert(temp, is_commit=False)
+                self.sess.add(Tempor(video_id=video_id,
+                                     time=now,
+                                     views=0,
+                                     likes=0,
+                                     dislikes=0,
+                                     comments=0))
         else:
-            beg = time.time()
+            objgraph.show_growth()
             with Pool(YConfig.PROCESSES_NUM) as p:
                 videos = p.map(VideoPage, self.video_ids)
+            objgraph.show_growth()
 
+            now = datetime.utcnow()
             for video in videos:
                 if video.is_removed:
                     self.video_ids.remove(video.video_id)
@@ -67,23 +79,15 @@ class Instance:
                 if not video.is_finish:
                     continue
 
-                temp = Tempor(video.video_id, datetime.utcnow(), video.views,
-                              video.likes, video.dislikes,
-                              video.comments)
-                self.db.insert(temp, is_commit=False)
+                temp = Tempor(video_id=video.video_id,
+                              time=now,
+                              views=video.views,
+                              likes=video.likes,
+                              dislikes=video.dislikes,
+                              comments=video.comments)
+                self.sess.add(temp)
 
-            logger.info("[{}] round with {} video cost: {}".format(
-                datetime.now(), len(self.video_ids),
-                time.time() - beg))
-        self.db.conn.commit()
-
-    def search_test(self):
-        temp_video_ids = []
-        for word in self._words:
-            search_page = SearchPage(word)
-            temp_video_ids.extend(search_page.vid_ids)
-        print(list(set(temp_video_ids)))
-        # self.video_ids = list(set(self.video_ids))
+        self.sess.commit()
 
 
 def get_words(part_index):
@@ -95,10 +99,17 @@ def get_words(part_index):
 # 全局的变量
 job_instance = None
 base_words_path = ''
+profile_path = 'dataset/profile.txt'
 
 
 def tick():
+    print("===========================")
+    time1 = tk.create_summary()
     job_instance.track()
+    time2 = tk.create_summary()
+    tk.print_diff(time1, time2)
+    print("---------------------------")
+    objgraph.show_growth()
 
 
 def single_scheduler(i):
@@ -107,8 +118,8 @@ def single_scheduler(i):
     job_instance = Instance(words, index)
     scheduler = BlockingScheduler()
     scheduler.add_executor('processpool')
-    # scheduler.add_job(tick, 'interval', seconds=200)
-    scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
+    scheduler.add_job(tick, 'interval', seconds=100)
+    # scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
@@ -116,6 +127,8 @@ def single_scheduler(i):
         scheduler.shutdown()
 
 
-index = int(sys.argv[1])
-# index = 0
+tk = tracker.SummaryTracker()
+print(os.getpid())
+# index = int(sys.argv[1])
+index = 1
 single_scheduler(index)

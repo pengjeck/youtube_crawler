@@ -97,7 +97,7 @@ json.json
 parse_video.json
 html.html
 .idea/
-log
+dataset/logging/*.txt
 dbs
 try/
 

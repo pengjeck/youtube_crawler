@@ -10,7 +10,7 @@ class YConfig:
     """
     youtube crawler config file
     """
-    DB_FILE = '/home/pj/dataset/database/youtube_{}.db'
+    DB_FILE = 'dataset/database/youtube_{}.db'
 
     @staticmethod
     def get_db_file(index):
@@ -22,12 +22,17 @@ class YConfig:
         # 建立100个数据库，这里的设定是，不同的数据库可能跟踪到了相同视频信息
         return YConfig.DB_FILE.format(index)
 
-    USER_AVATAR_PATH = '/home/pj/dataset/user_avatar/'
-    VIDEO_AVATAR_PATH = '/home/pj/dataset/video_avatar/'
-    LOGGING_PATH = '/home/pj/dataset/logging/'
+    USER_AVATAR_PATH = 'dataset/user_avatar/'
+    VIDEO_AVATAR_PATH = 'dataset/video_avatar/'
+    LOGGING_PATH = 'dataset/logging/'
 
-    GOOGLE10000 = '/home/pj/youtube_crawler/google_10000/part{}_google_10000.txt'
+    GOOGLE10000 = 'google_10000/part{}_google_10000.txt'
     IS_TESTING = True
+
+    PROXIES = {
+        'http': 'socks5://127.0.0.1:1080',
+        'https': 'socks5://127.0.0.1:1080'
+    }
 
     # key 应该是够用的
     KEYS = [
@@ -44,7 +49,7 @@ class YConfig:
         'AIzaSyDWwi4ccCyJyJ3KSFMxd-gl1A19ZKjVh4o'  # 9
     ]
 
-    SEARCH_PAGE_SIZE = 15  # youtube search api page size
+    SEARCH_PAGE_SIZE = 5  # youtube search api page size
 
     TRACK_SPAN = 900  # 15 * 60 = 900 minute. 默认15分钟记录一次
     TIMEOUT = 3  # 4秒的超时时间
