@@ -4,14 +4,13 @@ import time
 import atexit
 from config import YConfig
 import sys
-import os
 
 command = [
-    '/home/pj/pro/python/youtube_crawler/pyenv/bin/python',
-    '/home/pj/pro/python/youtube_crawler/track.py',
+    'pyenv/bin/python',
+    'track.py',
     '1'
 ]
-print(os.getpid())
+
 fls = []
 beg_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
