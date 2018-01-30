@@ -1,6 +1,5 @@
 # coding: utf-8
 import re
-import time
 from datetime import datetime
 import json
 import requests
@@ -132,8 +131,19 @@ class SearchPage:
 
 
 def parse_video_page(video_id):
+    """
+    解析视频页面
+    :param video_id:
+    :return:0：代表没有错误
+            1：代表views没有错误
+            2：代表views出现了错误，其他的不做判断
+    """
     res = {
-        'video_id': video_id
+        'video_id': video_id,
+        'code': 2,
+        'views': -1,
+        'likes': -1,
+        'dislikes': -1
     }
     try:
         video_url = 'https://www.youtube.com/watch'
@@ -145,25 +155,31 @@ def parse_video_page(video_id):
                            timeout=YConfig.TIMEOUT)
         if req.status_code != 200:
             return res
-
         data = req.text
         # region for views and check some error
-        raw_views = re.search('"view_count":"\d+"', data)
-        if raw_views is None:
-            if data.find('has been removed') != -1:
-                logger.error('video has been removed!!!')
-                return res
-            elif data.find('live stream recording is not available') != -1:
-                logger.error('This live stream recording is not available.')
-                return res
-            elif data.find('This video contains content from') != -1:
-                logger.error('this video contain some thing bad')
-                return res
-            else:
-                logger.error('cannot find view_count in self.data')
-                return res
-        res['views'] = int(raw_views.group(0)[14:-1])
-        # endregion for view
+        try:
+            raw_views = re.search('"view_count":"\d+"', data)
+            if raw_views is None:
+                if data.find('has been removed') != -1:
+                    logger.error('video has been removed!!!')
+                    return res
+                elif data.find('live stream recording is not available') != -1:
+                    logger.error('This live stream recording is not available.')
+                    return res
+                elif data.find('This video contains content from') != -1:
+                    logger.error('this video contain some thing bad')
+                    return res
+                else:
+                    logger.error('cannot find view_count in self.data')
+                    return res
+            res['views'] = int(raw_views.group(0)[14:-1])
+            res['code'] = 1  # view没有错误
+        except AttributeError:
+            return res
+        except ValueError:
+            return res
+
+            # endregion for view
 
         # region for likes
         raw_likes = re.search('like this video along with [\d,]+ other', data)
@@ -186,15 +202,29 @@ def parse_video_page(video_id):
             res['dislikes'] = int(re.search('\d+', row_dislikes.replace(',', '')).group(0))
 
         # endregion for dislikes
-    except (requests.HTTPError, requests.ConnectionError,
-            requests.Timeout, requests.exceptions.ChunkedEncodingError):
-        logger('network error!')
+        res['code'] = 0  # 没有错误
+        return res
+    except requests.HTTPError as http_e:
+        logger.error('network error: Reason:{}'.format(http_e))
+        res['code'] = 2
+        return res
+    except requests.ConnectionError as connection_e:
+        logger.error('network error: Reason:{}'.format(connection_e))
+        res['code'] = 2
+        return res
+    except requests.Timeout as timeout_e:
+        logger.error('network error: Reason:{}'.format(timeout_e))
+        res['code'] = 2
+        return res
+    except requests.exceptions.ChunkedEncodingError as chunked_e:
+        logger.error('network error: Reason: {}'.format(chunked_e))
+        res['code'] = 2
+        return res
     except ValueError as v_e:
         logger.error('value error occur. Reason:{}'.format(v_e))
-
+        return res
     except AttributeError as attr_e:
         logger.error('attribute error occur. reason: {}'.format(attr_e))
-    finally:
         return res
 
 

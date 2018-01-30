@@ -2,7 +2,7 @@
 import time
 from datetime import datetime
 import sqlite3
-from youtube import SearchPage, VideoPage
+from youtube import SearchPage, parse_video_page
 from database import get_session, Tempor
 from config import logger, YConfig
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -10,7 +10,6 @@ from multiprocessing import Pool
 import sys
 import objgraph
 import os
-from sqlalchemy.orm.exc import FlushError
 from pympler import tracker
 
 
@@ -65,28 +64,24 @@ class Instance:
                                      dislikes=0,
                                      comments=0))
         else:
-            objgraph.show_growth()
-            with Pool(YConfig.PROCESSES_NUM) as p:
-                videos = p.map(VideoPage, self.video_ids)
-            objgraph.show_growth()
-
             now = datetime.utcnow()
-            for video in videos:
-                if video.is_removed:
-                    self.video_ids.remove(video.video_id)
+            # objgraph.show_growth()
+            with Pool(YConfig.PROCESSES_NUM) as p:
+                video_pages = p.map(parse_video_page, self.video_ids)
+            # objgraph.show_growth()
+
+            for video_page in video_pages:
+                # view出现了错误,把这条记录删除掉
+                if video_page['code'] == 2:
                     continue
 
-                if not video.is_finish:
-                    continue
-
-                temp = Tempor(video_id=video.video_id,
+                temp = Tempor(video_id=video_page.video_id,
                               time=now,
-                              views=video.views,
-                              likes=video.likes,
-                              dislikes=video.dislikes,
-                              comments=video.comments)
+                              views=video_page.views,
+                              likes=video_page.likes,
+                              dislikes=video_page.dislikes,
+                              comments=-1)
                 self.sess.add(temp)
-
         self.sess.commit()
 
 

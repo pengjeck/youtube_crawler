@@ -18,7 +18,7 @@ def get_status(pid):
     return status
 
 
-def track(pid, times=100, time_span=3):
+def track(pid, times=100, time_span=100):
     for _ in range(times):
         now = time.time()
         print("now: {}\n vmrss:{} \n rssanon:{}\n rssfile:{}".format(now,
@@ -28,4 +28,4 @@ def track(pid, times=100, time_span=3):
         time.sleep(time_span)
 
 
-track(3881)
+track(2781)
