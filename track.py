@@ -94,8 +94,6 @@ def single_scheduler(i):
     words = get_words(i)
     job_instance = Instance(words, index)
     del words
-
-    # print(len(job_instance.video_ids))
     scheduler = BlockingScheduler()
     scheduler.add_executor('processpool')
     # scheduler.add_job(tick, 'interval', seconds=200)
@@ -107,7 +105,6 @@ def single_scheduler(i):
         scheduler.shutdown()
 
 
-# print(os.getpid())
 index = int(sys.argv[1])
 # index = 1
 single_scheduler(index)

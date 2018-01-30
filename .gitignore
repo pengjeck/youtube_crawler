@@ -97,8 +97,8 @@ json.json
 parse_video.json
 html.html
 .idea/
-dataset/logging/*.txt
-dataset/database/*.db
+dataset/logging/*txt
+dataset/database/*db
 try/
 
 pyenv/
