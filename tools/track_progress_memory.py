@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import sys
 import time
 
 
@@ -22,4 +21,4 @@ def track(pid, times=100000, time_span=1):
         time.sleep(time_span)
 
 
-track(14730)
+track(20004)

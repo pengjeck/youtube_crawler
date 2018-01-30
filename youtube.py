@@ -29,6 +29,9 @@ class SearchPage:
     """
     处理请求YouTube搜索页面的返回数据
     """
+    __slots__ = ('query_string', 'data',
+                 '_max_results', 'key_index',
+                 'vid_ids', 'vids',)
 
     def __init__(self, query_string):
         self.query_string = query_string
@@ -58,7 +61,6 @@ class SearchPage:
         }
         try:
             req = requests.get(search_url, params=params,
-                               proxies=YConfig.PROXIES,
                                timeout=YConfig.TIMEOUT)
             self.data = json.loads(req.text)
             if 'error' in self.data:
@@ -151,7 +153,6 @@ def parse_video_page(video_id):
             'v': video_id
         }
         req = requests.get(video_url, params=params,
-                           proxies=YConfig.PROXIES,
                            timeout=YConfig.TIMEOUT)
         if req.status_code != 200:
             return res

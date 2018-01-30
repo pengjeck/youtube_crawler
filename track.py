@@ -7,11 +7,11 @@ from config import logger, YConfig
 from apscheduler.schedulers.blocking import BlockingScheduler
 from multiprocessing import Pool
 import sys
-import os
 
 
 class Instance:
     """a track instance for adjust the params"""
+    __slots__ = ('sess', 'video_ids')
 
     def __init__(self, words, part_index):
         self.sess = get_session(part_index)
@@ -57,8 +57,7 @@ class Instance:
                                      time=now,
                                      views=0,
                                      likes=0,
-                                     dislikes=0,
-                                     comments=0))
+                                     dislikes=0))
         else:
             now = datetime.utcnow()
             with Pool(YConfig.PROCESSES_NUM) as p:
@@ -69,8 +68,7 @@ class Instance:
                               time=now,
                               views=video_page['views'],
                               likes=video_page['likes'],
-                              dislikes=video_page['dislikes'],
-                              comments=-1)
+                              dislikes=video_page['dislikes'])
                 self.sess.add(temp)
         self.sess.commit()
 
@@ -95,8 +93,7 @@ def single_scheduler(i):
     job_instance = Instance(words, index)
     del words
     scheduler = BlockingScheduler()
-    scheduler.add_executor('processpool')
-    # scheduler.add_job(tick, 'interval', seconds=200)
+    # scheduler.add_job(tick, 'interval', seconds=90)
     scheduler.add_job(tick, 'interval', seconds=YConfig.TRACK_SPAN)
     try:
         scheduler.start()

@@ -37,7 +37,6 @@ class Tempor(Base):
     views = Column(Integer)
     likes = Column(Integer)
     dislikes = Column(Integer)
-    comments = Column(Integer)
 
 
 def get_session(index):

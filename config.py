@@ -29,11 +29,6 @@ class YConfig:
     GOOGLE10000 = 'google_10000/part{}_google_10000.txt'
     IS_TESTING = True
 
-    PROXIES = {
-        'http': 'socks5://127.0.0.1:1080',
-        'https': 'socks5://127.0.0.1:1080'
-    }
-
     # key 应该是够用的
     KEYS = [
         'AIzaSyDAa3uq-6FvLYcnU0_KA3Z6TOXSFRXnEqU',  # video recommendation
@@ -56,7 +51,7 @@ class YConfig:
 
     BEFORE_TIMEDELTA = timedelta(minutes=7)  # 7分钟
 
-    PROCESSES_NUM = 30  # pool(30)
+    PROCESSES_NUM = 20  # pool(30)
 
     @staticmethod
     def logging_file():
