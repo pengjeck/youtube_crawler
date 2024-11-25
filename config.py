@@ -1,6 +1,3 @@
-"""
-config module
-"""
 # coding: utf-8
 
 import logging
@@ -13,7 +10,7 @@ class YConfig:
     """
     youtube crawler config file
     """
-    DB_FILE = '/home/pj/datum/GraduationProject/dataset/youtube/database/youtube_{}.db'
+    DB_FILE = 'dataset/database/youtube_{}.db'
 
     @staticmethod
     def get_db_file(index):
@@ -25,11 +22,11 @@ class YConfig:
         # 建立100个数据库，这里的设定是，不同的数据库可能跟踪到了相同视频信息
         return YConfig.DB_FILE.format(index)
 
-    USER_AVATAR_PATH = '/home/pj/datum/GraduationProject/dataset/youtube/user_avatar/'
-    VIDEO_AVATAR_PATH = '/home/pj/datum/GraduationProject/dataset/youtube/video_avatar/'
-    LOGGING_PATH = '/home/pj/datum/GraduationProject/dataset/youtube/logging/'
+    USER_AVATAR_PATH = 'dataset/user_avatar/'
+    VIDEO_AVATAR_PATH = 'dataset/video_avatar/'
+    LOGGING_PATH = 'dataset/logging/'
 
-    GOOGLE10000ENGLISH = '/home/pj/datum/GraduationProject/dataset/google-10000-english/google-10000-english.txt'
+    GOOGLE10000 = 'google_10000/part{}_google_10000.txt'
     IS_TESTING = True
 
     # key 应该是够用的
@@ -47,11 +44,6 @@ class YConfig:
         'AIzaSyDWwi4ccCyJyJ3KSFMxd-gl1A19ZKjVh4o'  # 9
     ]
 
-    PROXIES = {
-        'http': 'socks5://127.0.0.1:1081',
-        'https': 'socks5://127.0.0.1:1081'
-    }
-
     SEARCH_PAGE_SIZE = 15  # youtube search api page size
 
     TRACK_SPAN = 900  # 15 * 60 = 900 minute. 默认15分钟记录一次
@@ -59,7 +51,7 @@ class YConfig:
 
     BEFORE_TIMEDELTA = timedelta(minutes=7)  # 7分钟
 
-    PROCESSES_NUM = 30  # pool(30)
+    PROCESSES_NUM = 20  # pool(30)
 
     @staticmethod
     def logging_file():
@@ -71,7 +63,6 @@ class YConfig:
 
 logger = logging.getLogger('base')
 formatter = logging.Formatter('%(asctime)s - %(message)s')
-
 
 fh = logging.FileHandler(YConfig.logging_file())
 fh.setLevel(logging.INFO)
